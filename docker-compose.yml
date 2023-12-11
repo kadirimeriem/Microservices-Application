@@ -1,0 +1,83 @@
+version: '3'
+services:
+  eureka:
+    container_name: eureka
+    restart: always
+    ports:
+      - "8761:8761"
+    build: ./Eureka_Server
+    networks:
+      - reseau
+      
+  gateway-server:
+    container_name: gateway
+    restart: always
+    ports:
+      - "8888:8888"
+    build: ./Gateway
+    environment:
+      - EUREKA_SERVER=eureka
+    networks:
+      - reseau
+      
+
+  client:
+    container_name: client
+    restart: always
+    ports:
+      - "8002:8002"
+    build:
+      context: ./Client
+      dockerfile: Dockerfile
+    environment:
+      - EUREKA_SERVER=eureka
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_PORT=3306
+    depends_on:
+      - eureka
+      - mysql
+    networks:
+      - reseau
+      
+
+  voiture:
+    container_name: voiture
+    restart: always
+    ports:
+      - "8001:8001"
+    build:
+      context: ./Voiture
+      dockerfile: Dockerfile
+    environment:
+      - EUREKA_SERVER=eureka
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_PORT=3306
+    depends_on:
+      - eureka
+      - mysql
+    networks:
+      - reseau
+      
+
+  mysql:
+    container_name: mysql
+    image: mysql:latest
+    ports: 
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: database
+      MYSQL_ROOT_PASSWORD: root
+    networks:
+      - reseau
+      
+
+volumes:
+  mysql:
+
+networks:
+  link:
+    driver: bridge
